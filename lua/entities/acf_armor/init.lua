@@ -3,10 +3,24 @@ AddCSLuaFile("cl_init.lua")
 
 include("shared.lua")
 
+local ACF = ACF
+
 do -- Spawning and Updating
 	local Armors = ACF.Classes.ArmorTypes
 
 	local function VerifyData(Data)
+		if not isstring(Data.ArmorType) then
+			Data.ArmorType = "RHA"
+		end
+
+		local Armor = Armors[Data.ArmorType]
+
+		if not Armor then
+			Data.ArmorType = RHA
+
+			Armor = Armors.RHA
+		end
+
 		do -- Verifying dimension values
 			if not isnumber(Data.Width) then
 				Data.Width = ACF.CheckNumber(Data.PlateSizeX, 24)
@@ -20,22 +34,14 @@ do -- Spawning and Updating
 				Data.Thickness = ACF.CheckNumber(Data.PlateSizeZ, 5)
 			end
 
-			Data.Width     = math.Clamp(Data.Width, 0.25, 420)
-			Data.Height    = math.Clamp(Data.Height, 0.25, 420)
-			Data.Thickness = math.Clamp(Data.Thickness, 5, 1000)
-			Data.Size      = Vector(Data.Width, Data.Height, Data.Thickness * 0.03937)
-		end
+			Data.Width  = math.Clamp(Data.Width, 0.25, 420)
+			Data.Height = math.Clamp(Data.Height, 0.25, 420)
 
-		if not isstring(Data.ArmorType) then
-			Data.ArmorType = "RHA"
-		end
+			local MaxPossible = 50000 / (Data.Width * Data.Height * Armor.Density * ACF.gCmToKgIn) * ACF.InchToMm
+			local MaxAllowed  = math.min(ACF.MaximumArmor, ACF.GetServerNumber("MaxThickness"))
 
-		local Armor = Armors[Data.ArmorType]
-
-		if not Armor then
-			Data.ArmorType = RHA
-
-			Armor = Armors.RHA
+			Data.Thickness = math.min(Data.Thickness, MaxPossible)
+			Data.Size      = Vector(Data.Width, Data.Height, math.Clamp(Data.Thickness, ACF.MinimumArmor, MaxAllowed) * ACF.MmToInch)
 		end
 
 		do -- External verifications
@@ -48,17 +54,24 @@ do -- Spawning and Updating
 	end
 
 	local function UpdatePlate(Entity, Data, Armor)
+		local Size = Data.Size
+
 		Entity.ArmorClass = Armor
 		Entity.Tensile    = Armor.Tensile
 		Entity.Density    = Armor.Density
 
 		Entity:SetNW2String("ArmorType", Armor.ID)
-		Entity:SetSize(Data.Size)
+		Entity:SetSize(Size)
 
 		-- Storing all the relevant information on the entity for duping
 		for _, V in ipairs(Entity.DataStore) do
 			Entity[V] = Data[V]
 		end
+
+		ACF.Activate(Entity)
+
+		Entity.ACF.Mass       = Armor:GetMass(Size.x * Size.y * Size.z)
+		Entity.ACF.LegalMamss = Entity.ACF.Mass
 	end
 
 	function MakeACF_Armor(Player, Pos, Angle, Data)
@@ -143,8 +156,7 @@ do -- Spawning and Updating
 	end
 
 	function ENT:OnResized(Size)
-		local Volume = Size.x * Size.y * Size.z
-		local Mass   = self.ArmorClass:GetMass(Volume)
+		local Mass = self.ArmorClass:GetMass(Size.x * Size.y * Size.z)
 
 		self:GetPhysicsObject():SetMass(Mass)
 	end

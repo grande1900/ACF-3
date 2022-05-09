@@ -19,6 +19,38 @@ local function GetAncestor(Ent)
 	return Parent, Last
 end
 
+function ACF.getAncestors(ent)
+	local ancestors = {}
+	local parent    = ent:GetParent()
+	local count     = 0
+
+	while IsValid(parent) do
+		count            = count + 1
+		ancestors[count] = parent
+
+		parent = parent:GetParent()
+	end
+
+	return ancestors
+end
+
+function ACF.hasAncestor(ent, ancestor)
+	if not IsValid(ent) then return false end
+	if not IsValid(ancestor) then return false end
+
+	local parent = ent:GetParent()
+
+	while IsValid(parent) do
+		if parent == ancestor then
+			return true
+		end
+
+		parent = parent:GetParent()
+	end
+
+	return false
+end
+
 local function GetAllPhysicalEntities(Ent, Tab)
 	local Res = Tab or {}
 

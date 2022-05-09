@@ -22,6 +22,8 @@ local function UpdateTotalAmmo(Entity)
 		end
 	end
 
+	Entity.TotalAmmo = Total
+
 	WireLib.TriggerOutput(Entity, "Total Ammo", Total)
 end
 
@@ -91,11 +93,12 @@ do -- Spawn and Update functions --------------------------------
 
 	local function CreateOutputs(Entity, Data, Class, Weapon)
 		local List = {
+			"Entity (The weapon itself) [ENTITY]",
 			"Ready (Whether the weapon can fire or not)",
 			"Status (Current state of the weapon) [STRING]",
-			"Total Ammo (Rounds immediately available to the weapon)",
-			"Entity (The weapon itself) [ENTITY]",
+			"Ammo Type (Name of the ammo currently loaded into the weapon) [STRING]",
 			"Shots Left (How many rounds are left before a reload is required)",
+			"Total Ammo (Rounds immediately available to the weapon)",
 			"Rate of Fire (How fast the weapon can fire)",
 			"Reload Time (How long a reload will take)",
 			"Projectile Mass (The mass of the projectile)",
@@ -253,6 +256,7 @@ do -- Spawn and Update functions --------------------------------
 		Entity.State        = "Empty"
 		Entity.Crates       = {}
 		Entity.CurrentShot  = 0
+		Entity.TotalAmmo    = 0
 		Entity.BulletData   = EMPTY
 		Entity.DataStore    = ACF.GetEntityArguments("acf_gun")
 
@@ -260,6 +264,7 @@ do -- Spawn and Update functions --------------------------------
 
 		WireLib.TriggerOutput(Entity, "Status", "Empty")
 		WireLib.TriggerOutput(Entity, "Entity", Entity)
+		WireLib.TriggerOutput(Entity, "Ammo Type", "Empty")
 		WireLib.TriggerOutput(Entity, "Projectile Mass", 1000)
 		WireLib.TriggerOutput(Entity, "Muzzle Velocity", 1000)
 
@@ -439,25 +444,32 @@ do -- Metamethods --------------------------------
 	end -----------------------------------------
 
 	do -- Shooting ------------------------------
-		local Trace     = util.TraceLine
-		local TraceRes  = {} -- Output for traces
-		local TraceData = { start = true, endpos = true, filter = true, mask = MASK_SOLID, output = TraceRes }
+		local Trace        = util.TraceLine
+		local TraceRes     = {} -- Output for traces
+		local TraceData    = { start = true, endpos = true, filter = true, mask = MASK_SOLID, output = TraceRes }
+		--local hasAncestor  = ACF.hasAncestor
 
 		function ENT:BarrelCheck(Offset)
-			TraceData.start	 = self:LocalToWorld(Vector()) + Offset
+			local owner  = self:GetPlayer()
+			local filter = self.BarrelFilter
+
+			TraceData.start	 = self:GetPos() + Offset
 			TraceData.endpos = self:LocalToWorld(self.Muzzle) + Offset
-			TraceData.filter = self.BarrelFilter
+			TraceData.filter = filter
 
 			Trace(TraceData)
 
-			if TraceRes.Hit then
+			while TraceRes.HitNonWorld do
 				local Entity = TraceRes.Entity
 
-				if Entity == self.CurrentUser or Entity:CPPIGetOwner() == self:GetPlayer() then
-					self.BarrelFilter[#self.BarrelFilter + 1] = Entity
+				if Entity.IsACFEntity and not Entity.IsACFArmor then break end
+				if Entity:CPPIGetOwner() ~= owner then break end
+				--if not Entity:GetParent() then break end
+				--if not hasAncestor(Entity, self) then break end
 
-					return self:BarrelCheck(Offset)
-				end
+				filter[#filter + 1] = Entity
+
+				Trace(TraceData)
 			end
 
 			return TraceRes.HitPos
@@ -607,6 +619,7 @@ do -- Metamethods --------------------------------
 			self.CurrentShot = 0
 			self.BulletData  = EMPTY
 
+			WireLib.TriggerOutput(self, "Ammo Type", "Empty")
 			WireLib.TriggerOutput(self, "Shots Left", 0)
 
 			timer.Simple(Time, function()
@@ -642,12 +655,13 @@ do -- Metamethods --------------------------------
 					WireLib.TriggerOutput(self, "Rate of Fire", 60 / self.ReloadTime)
 				end
 
+				WireLib.TriggerOutput(self, "Ammo Type", BulletData.Type)
 				WireLib.TriggerOutput(self, "Shots Left", self.CurrentShot)
 
 				timer.Simple(Time, function()
 					if IsValid(self) then
 						if self.CurrentShot == 0 then
-							self.CurrentShot = self.MagSize
+							self.CurrentShot = math.min(self.MagSize, self.TotalAmmo)
 						end
 
 						self.NextFire = nil
@@ -667,6 +681,7 @@ do -- Metamethods --------------------------------
 				self.CurrentShot = 0
 				self.BulletData  = EMPTY
 
+				WireLib.TriggerOutput(self, "Ammo Type", "Empty")
 				WireLib.TriggerOutput(self, "Shots Left", 0)
 			end
 		end
@@ -679,6 +694,7 @@ do -- Metamethods --------------------------------
 				self.CurrentShot = 0
 				self.BulletData  = EMPTY
 
+				WireLib.TriggerOutput(self, "Ammo Type", "Empty")
 				WireLib.TriggerOutput(self, "Shots Left", 0)
 
 				return false
