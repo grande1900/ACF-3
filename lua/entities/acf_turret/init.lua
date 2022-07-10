@@ -139,7 +139,7 @@ do -- Spawning and updating
 			return
 		end
 
-		local Class = Turrets[Data.TurretClass]
+		local Class = Turrets.Get(Data.TurretClass) -- TODO: Verify TurretClass actually exists beforehand
 
 		Player:AddCount("_acf_turret", Entity)
 		Player:AddCleanup("_acf_turret", Entity)
@@ -209,7 +209,7 @@ do -- Spawning and updating
 	function ENT:Update(Data)
 		VerifyData(Data)
 
-		local Turret    = Turrets[Data.TurretClass]
+		local Turret    = Turrets.Get(Data.TurretClass)
 		local OldTurret = self
 
 		if OldTurret.TurretClass ~= Data.TurretClass then return false, "Mismatched turret types! " .. OldTurret.TurretClass .. " > " .. Data.TurretClass end

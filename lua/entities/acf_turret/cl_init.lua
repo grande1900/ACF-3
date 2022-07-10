@@ -44,8 +44,6 @@ end
 
 ----
 
-local Turrets = ACF.Classes.TurretTypes
-
 do -- Updating
 	function ENT:Update()
 
@@ -53,7 +51,12 @@ do -- Updating
 end
 
 do -- Turret menu item
+	-- TODO: Move this into the proper folder
+	local Turrets = ACF.Classes.TurretTypes
+
 	local function CreateMenu(Menu)
+		local Entries = Turrets.GetEntries()
+
 		ACF.SetToolMode("acf_menu", "Spawner", "Component")
 
 		ACF.SetClientData("PrimaryClass", "acf_turret")
@@ -93,7 +96,7 @@ do -- Turret menu item
 			return X
 		end)
 
-		ACF.LoadSortedList(ClassList, Turrets, "Name")
+		ACF.LoadSortedList(ClassList, Entries, "Name")
 	end
 
 	ACF.AddMenuItem(3, "Entities", "Turrets", "cog", CreateMenu)
