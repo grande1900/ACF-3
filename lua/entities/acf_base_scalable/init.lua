@@ -183,3 +183,11 @@ do -- Entity user -------------------------------
 		return IsValid(User) and User or self:GetPlayer()
 	end
 end ---------------------------------------------
+
+do -- Stub exploitable functions
+	ACF.detours.ENT.SetCollisionGroup = ENT.SetCollisionGroup
+
+	ENT.SetCollisionGroup = ACF.detours.doNothing
+	ENT.SetModel          = ACF.detours.doNothing
+	ENT.SetNoDraw         = ACF.detours.doNothing
+end

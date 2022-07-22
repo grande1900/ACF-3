@@ -90,10 +90,14 @@ do -- Spawning and Updating
 		local CanSpawn = hook.Run("ACF_PreEntitySpawn", "acf_armor", Player, Data, Armor)
 		if CanSpawn == false then return false end
 
+		--
+
+		Plate.ACF = Plate.ACF or {}
+
 		Player:AddCount("_acf_armor", Plate)
 		Player:AddCleanup("_acf_armor", Plate)
 
-		Plate:SetModel("models/holograms/cube.mdl")
+		ACF.setModel(Plate, "models/holograms/cube.mdl")
 		Plate:SetMaterial("sprops/textures/sprops_metal1")
 		Plate:SetPlayer(Player)
 		Plate:SetAngles(Angle)
@@ -160,7 +164,7 @@ do -- Spawning and Updating
 	function ENT:OnResized(Size)
 		local Mass = self.ArmorClass:GetMass(Size.x * Size.y * Size.z)
 
-		self:GetPhysicsObject():SetMass(Mass)
+		ACF.setMass(self, Mass)
 	end
 end
 

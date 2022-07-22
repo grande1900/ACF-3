@@ -121,10 +121,7 @@ do -- Spawn and Update functions -----------------------
 	end
 
 	local function UpdateGearbox(Entity, Data, Class, Gearbox)
-		Entity.ACF = Entity.ACF or {}
-		Entity.ACF.Model = Gearbox.Model -- Must be set before changing model
-
-		Entity:SetModel(Gearbox.Model)
+		ACF.setMass(Entity, Gearbox.Model)
 
 		Entity:PhysicsInit(SOLID_VPHYSICS)
 		Entity:SetMoveType(MOVETYPE_VPHYSICS)
@@ -156,12 +153,7 @@ do -- Spawn and Update functions -----------------------
 		Entity:SetNWString("WireName", "ACF " .. Entity.Name)
 
 		ACF.Activate(Entity, true)
-
-		Entity.ACF.LegalMass = Gearbox.Mass
-		Entity.ACF.Model     = Gearbox.Model
-
-		local Phys = Entity:GetPhysicsObject()
-		if IsValid(Phys) then Phys:SetMass(Gearbox.Mass) end
+		ACF.setMass(Entity, Gearbox.Mass)
 
 		Entity:ChangeGear(1)
 	end
@@ -250,6 +242,10 @@ do -- Spawn and Update functions -----------------------
 		local Entity = ents.Create("acf_gearbox")
 
 		if not IsValid(Entity) then return end
+
+		--
+
+		Entity.ACF = Entity.ACF or {}
 
 		Entity:SetPlayer(Player)
 		Entity:SetAngles(Angle)

@@ -64,10 +64,7 @@ do -- Spawn and Update functions
 		-- If updating, keep the same fuel level
 		local Percentage = Entity.Capacity and Entity.Fuel / Entity.Capacity or 1
 
-		Entity.ACF = Entity.ACF or {}
-		Entity.ACF.Model = FuelTank.Model -- Must be set before changing model
-
-		Entity:SetModel(FuelTank.Model)
+		ACF.setModel(Entity, FuelTank.Model)
 
 		Entity:PhysicsInit(SOLID_VPHYSICS)
 		Entity:SetMoveType(MOVETYPE_VPHYSICS)
@@ -132,6 +129,10 @@ do -- Spawn and Update functions
 
 		if not IsValid(Tank) then return end
 
+		--
+
+		Tank.ACF = Tank.ACF or {}
+	
 		Tank:SetPlayer(Player)
 		Tank:SetAngles(Angle)
 		Tank:SetPos(Pos)
@@ -361,11 +362,7 @@ do -- Mass Update
 		local Mass = math.floor(Entity.EmptyMass + Fuel * Entity.FuelDensity)
 		local PhysObj = Entity.ACF.PhysObj
 
-		Entity.ACF.LegalMass = Mass
-
-		if IsValid(PhysObj) then
-			PhysObj:SetMass(Mass)
-		end
+		ACF.setMmass(Entity, Mass)
 	end
 
 	function ENT:UpdateMass(Instant)

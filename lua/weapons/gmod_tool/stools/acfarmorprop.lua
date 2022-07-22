@@ -38,11 +38,7 @@ local function UpdateValues(Entity, Data, PhysObj, Area, Ductility)
 	Entity.ACF.Thickness = Thickness
 	Entity.ACF.Ductility = Ductility * 0.01
 
-	if Mass ~= Entity.ACF.Mass then
-		Entity.ACF.Mass = Mass
-
-		PhysObj:SetMass(Mass)
-	end
+	ACF.setMass(Entity, Mass)
 end
 
 local function UpdateArmor(_, Entity, Data)

@@ -244,53 +244,6 @@ do -- ACF Parent Detouring
 	end)
 end
 
-do -- ASSUMING DIRECT CONTROL
-	local ENT = FindMetaTable("Entity")
-	local OBJ = FindMetaTable("PhysObj")
-
-	do -- SetMass
-		-- Reject any changes to mass on ACF entities
-		-- Mass can only be set to whatever Ent.ACF.LegalMass is
-		local SetMass = SetMass or OBJ.SetMass
-
-		function OBJ:SetMass(Number)
-			local Ent = self:GetEntity()
-
-			if Ent.IsACFEntity and Ent.ACF and Number ~= Ent.ACF.LegalMass then
-				return
-			end
-
-			SetMass(self, Number)
-		end
-	end
-
-	do -- SetModel
-		-- Reject any changes to the model on ACF entities
-		-- Models can only be set to whatever Ent.ACF.Model is
-		local SetModel = SetModel or ENT.SetModel
-
-		function ENT:SetModel(String)
-			if self.IsACFEntity and self.ACF and String ~= self.ACF.Model then
-				return
-			end
-
-			SetModel(self, String)
-		end
-	end
-
-	do -- SetNoDraw
-		local SetNoDraw = SetNoDraw or ENT.SetNoDraw
-
-		function ENT:SetNoDraw(Bool)
-			if Bool and self.IsACFEntity then
-				return
-			end
-
-			SetNoDraw(self, Bool)
-		end
-	end
-end
-
 -- Globalize ------------------------------------
 ACF_GetAllPhysicalEntities 	= GetAllPhysicalEntities
 ACF_GetAllChildren 			= GetAllChildren

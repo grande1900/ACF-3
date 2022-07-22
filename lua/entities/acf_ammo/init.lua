@@ -264,14 +264,16 @@ do -- Spawning and Updating --------------------
 		Player:AddCleanup("acf_ammo", Crate)
 		Player:AddCount("_acf_ammo", Crate)
 
-		Crate.ACF       = Crate.ACF or {}
-		Crate.ACF.Model = Model
+		--
+
+		Crate.ACF = Crate.ACF or {}
+
+		ACF.setModel(Crate, Model)
 
 		Crate:SetMaterial("phoenix_storms/Future_vents")
 		Crate:SetPlayer(Player)
-		Crate:SetModel(Model)
 		Crate:SetAngles(Ang)
-		Crate:SetPos(Pos)
+		Crate:SetPos(Pos)		
 		Crate:Spawn()
 
 		Crate.Owner       = Player -- MUST be stored on ent for PP
@@ -588,13 +590,9 @@ end ---------------------------------------------
 
 do -- Mass Update -------------------------------
 	local function UpdateMass(Ent)
-		Ent.ACF.LegalMass = math.floor(Ent.EmptyMass + (Ent.AmmoMass * (Ent.Ammo / math.max(Ent.Capacity, 1))))
-
-		local Phys = Ent:GetPhysicsObject()
-
-		if IsValid(Phys) then
-			Phys:SetMass(Ent.ACF.LegalMass)
-		end
+		local newMass = math.floor(Ent.EmptyMass + (Ent.AmmoMass * (Ent.Ammo / math.max(Ent.Capacity, 1))))
+	
+		ACF.setMass(ent, newMass)
 	end
 
 	-------------------------------------------------------------------------------

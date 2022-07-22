@@ -87,9 +87,7 @@ do -- Spawning and Updating --------------------
 		local Scale   = Caliber / Class.Caliber.Base
 		local Mass    = math.floor(Class.Mass * Scale)
 
-		Entity.ACF.Model = Class.Model -- Must be set before changing model
-
-		Entity:SetModel(Class.Model)
+		ACF.setModel(Entity, Class.Model)
 		Entity:SetScale(Scale)
 
 		-- Storing all the relevant information on the entity for duping
@@ -168,14 +166,7 @@ do -- Spawning and Updating --------------------
 		Entity:SetNWString("WireName", "ACF " .. Entity.Name)
 
 		ACF.Activate(Entity, true)
-
-		Entity.ACF.LegalMass = Mass
-
-		local Phys = Entity:GetPhysicsObject()
-
-		if IsValid(Phys) then
-			Phys:SetMass(Mass)
-		end
+		ACF.setMass(Entity, Mass)
 	end
 
 	-------------------------------------------------------------------------------
@@ -197,7 +188,12 @@ do -- Spawning and Updating --------------------
 		Player:AddCleanup(Class.Cleanup, Entity)
 		Player:AddCount(Limit, Entity)
 
-		Entity:SetModel(Class.Model) -- NOTE: ENT:SetScale didn't work properly without this
+		--
+
+		Entity.ACF = Entity.ACF or {}
+
+		ACF.setModel(Entity, Class.Model)
+
 		Entity:SetPlayer(Player)
 		Entity:SetAngles(Angle)
 		Entity:SetPos(Pos)

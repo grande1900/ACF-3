@@ -7,12 +7,6 @@ local TimerSimple  = timer.Simple
 local Baddies	   = ACF.GlobalFilter
 local MinimumArmor = ACF.MinimumArmor
 local MaximumArmor = ACF.MaximumArmor
-local NoCollision  = { -- These prevent ACF bullets from hitting an entity
-	[COLLISION_GROUP_DEBRIS] = true,
-	[COLLISION_GROUP_IN_VEHICLE] = true,
-	[COLLISION_GROUP_VEHICLE_CLIP] = true,
-	[COLLISION_GROUP_DOOR_BLOCKER] = true
-}
 
 --[[ ACF Legality Check
 	ALL SENTS MUST HAVE:
@@ -43,7 +37,6 @@ function ACF.IsLegal(Entity)
 		end
 	end
 	if not Entity:IsSolid() then return false, "Not Solid", "The entity is invisible to projectiles." end
-	if NoCollision[Entity:GetCollisionGroup()] then return false, "Invalid Collisions", "The entity is invisible to projectiles." end
 	if Entity.ClipData and next(Entity.ClipData) then return false, "Visual Clip", "Visual clip cannot be applied to ACF entities." end -- No visclip
 	if Entity.IsACFWeapon and not ACF.GunsCanFire then return false, "Cannot fire", "Firing disabled by the servers ACF settings." end
 	if Entity.IsRack and not ACF.RacksCanFire then return false, "Cannot fire", "Firing disabled by the servers ACF settings." end
@@ -150,10 +143,8 @@ local function UpdateThickness(Entity, PhysObj, Area, Ductility)
 		if not MassMod then
 			local Mass = Area * (1 + Ductility) ^ 0.5 * Thickness * 0.00078
 
-			if Mass ~= Entity.ACF.Mass then
-				Entity.ACF.Mass = Mass
-
-				PhysObj:SetMass(Mass)
+			if Mass ~= Entity.ACF.mass then
+				ACF.setMass(Entity, Mass)
 			end
 
 			return Thickness
@@ -168,10 +159,8 @@ local function UpdateThickness(Entity, PhysObj, Area, Ductility)
 	local Mass  = MassMod and MassMod.Mass or PhysObj:GetMass()
 	local Armor = ACF_CalcArmor(Area, Ductility, Mass)
 
-	if Mass ~= Entity.ACF.Mass then
-		Entity.ACF.Mass = Mass
-
-		PhysObj:SetMass(Mass)
+	if Mass ~= Entity.ACF.mass then
+		ACF.setMass(Entity, Mass)
 
 		duplicator.StoreEntityModifier(Entity, "mass", { Mass = Mass })
 	end
@@ -241,6 +230,42 @@ function ACF.Activate(Entity, Recalc)
 	Entity.ACF.Armour    = Thickness * (0.5 + Percent * 0.5)
 	Entity.ACF.MaxArmour = Thickness * ACF.ArmorMod
 	Entity.ACF.Ductility = Ductility
+end
+
+do -- Block exploitable functions
+	ACF.detours = ACF.detours or {
+		ENT = {},
+		OBJ = {},
+		doNothing = function() end
+	}
+
+	local entDetours = ACF.detours.ENT
+	local objDetours = ACF.detours.OBJ
+	local ENT        = FindMetaTable("Entity")
+	local OBJ        = FindMetaTable("PhysObj")
+	local SetMass    = OBJ.SetMass
+	local SetModel   = ENT.SetModel
+
+	objDetours.SetMass  = SetMass
+	entDetours.SetModel = SetModel
+
+	function ACF.setMass(entity, number)
+		entity.ACF.mass = number
+
+		SetMass(entity:GetPhysicsObject(), number)
+	end
+
+	function ACF.setModel(entity, model)
+		entity.ACF.model = model
+
+		SetModel(entity, model)
+	end
+
+	function OBJ:SetMass(Number)
+		if self:GetEntity().IsACFEntity then return end
+		
+		SetMass(self, Number)
+	end
 end
 
 -- Globalize ------------------------------------

@@ -261,10 +261,7 @@ do -- Spawn and Update functions
 	end
 
 	local function UpdateEngine(Entity, Data, Class, Engine, Type)
-		Entity.ACF = Entity.ACF or {}
-		Entity.ACF.Model = Engine.Model
-
-		Entity:SetModel(Engine.Model)
+		ACF.setModel(Entity, Engine.Model)
 
 		Entity:PhysicsInit(SOLID_VPHYSICS)
 		Entity:SetMoveType(MOVETYPE_VPHYSICS)
@@ -316,11 +313,8 @@ do -- Spawn and Update functions
 
 		ACF.Activate(Entity, true)
 
-		Entity.ACF.LegalMass	= Engine.Mass
-		Entity.ACF.Model		= Engine.Model
 
-		local Phys = Entity:GetPhysicsObject()
-		if IsValid(Phys) then Phys:SetMass(Engine.Mass) end
+		ACF.setMass(Entity, Engine.Mass)
 	end
 
 	function MakeACF_Engine(Player, Pos, Angle, Data)
@@ -340,6 +334,10 @@ do -- Spawn and Update functions
 		local Entity = ents.Create("acf_engine")
 
 		if not IsValid(Entity) then return false end
+
+		--
+
+		Entity.ACF = Entity.ACF or {}
 
 		Entity:SetPlayer(Player)
 		Entity:SetAngles(Angle)

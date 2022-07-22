@@ -154,9 +154,8 @@ do -- Spawn and Update functions --------------------------------
 		local Cyclic  = ACF.GetWeaponValue("Cyclic", Caliber, Class, Weapon)
 		local MagSize = ACF.GetWeaponValue("MagSize", Caliber, Class, Weapon) or 1
 
-		Entity.ACF.Model = Model
+		ACF.setModel(Entity, Model)
 
-		Entity:SetModel(Model)
 		Entity:SetScale(Scale)
 
 		-- Storing all the relevant information on the entity for duping
@@ -204,16 +203,7 @@ do -- Spawn and Update functions --------------------------------
 		end
 
 		ACF.Activate(Entity, true)
-
-		local PhysObj = Entity.ACF.PhysObj
-
-		if IsValid(PhysObj) then
-			local Mass = GetMass(Model, PhysObj, Class, Weapon)
-
-			Entity.ACF.LegalMass = Mass
-
-			PhysObj:SetMass(Mass)
-		end
+		ACF.setMass(Entity, GetMass(Model, PhysObj, Class, Weapon))
 	end
 
 	hook.Add("ACF_OnSetupInputs", "ACF Weapon Fuze", function(Class, List, Entity)
@@ -245,8 +235,12 @@ do -- Spawn and Update functions --------------------------------
 		Player:AddCleanup(Class.Cleanup, Entity)
 		Player:AddCount(Limit, Entity)
 
-		-- The model isn't automatically updated, so this is required
-		Entity:SetModel(Weapon and Weapon.Model or Class.Model)
+		--
+
+		Entity.ACF = Entity.ACF or {}
+
+		ACF.setModel(Entity, Weapon and Weapon.Model or Class.Model)
+
 		Entity:SetPlayer(Player)
 		Entity:SetAngles(Angle)
 		Entity:SetPos(Pos)
